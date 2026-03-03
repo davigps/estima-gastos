@@ -1,20 +1,19 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-// AUTH_PASSWORD and JWT_SECRET are set in tests/setup.ts
+// Mock @/lib/auth to avoid jose's realm boundary issue in Vitest/jsdom.
+// The auth unit tests (auth.test.ts) cover the JWT logic separately.
+const mockSignToken = vi.hoisted(() => vi.fn().mockResolvedValue("mock-jwt-token"));
+vi.mock("@/lib/auth", () => ({
+  signToken: mockSignToken,
+  verifyToken: vi.fn(),
+}));
 
+import { POST as login } from "@/app/api/auth/login/route";
+import { POST as logout } from "@/app/api/auth/logout/route";
+
+// AUTH_PASSWORD is set in tests/setup.ts
 describe("POST /api/auth/login", () => {
-  // Import inside test to ensure env vars are set before module loads
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let login: (req: NextRequest) => Promise<any>;
-
-  beforeEach(async () => {
-    vi.resetModules();
-    process.env.AUTH_PASSWORD = "testpassword123";
-    const mod = await import("@/app/api/auth/login/route");
-    login = mod.POST;
-  });
-
   it("senha correta → status 200, { ok: true }, set-cookie session", async () => {
     const req = new NextRequest("http://localhost/api/auth/login", {
       method: "POST",
@@ -30,6 +29,8 @@ describe("POST /api/auth/login", () => {
 
     const cookie = response.headers.get("set-cookie");
     expect(cookie).toContain("session=");
+    // mockSignToken was called and its return value used as the cookie value
+    expect(cookie).toContain("mock-jwt-token");
   });
 
   it("senha incorreta → status 401, { error: 'Senha incorreta' }", async () => {
@@ -62,7 +63,6 @@ describe("POST /api/auth/login", () => {
 
 describe("POST /api/auth/logout", () => {
   it("retorna 200 com { ok: true }", async () => {
-    const { POST: logout } = await import("@/app/api/auth/logout/route");
     const response = await logout();
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -70,7 +70,6 @@ describe("POST /api/auth/logout", () => {
   });
 
   it("cookie session definido com maxAge=0", async () => {
-    const { POST: logout } = await import("@/app/api/auth/logout/route");
     const response = await logout();
     const cookie = response.headers.get("set-cookie");
     expect(cookie?.toLowerCase()).toContain("max-age=0");

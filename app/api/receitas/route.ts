@@ -15,8 +15,8 @@ export async function GET(req: NextRequest) {
   if (categoriaId) where.categoriaId = categoriaId;
   if (formaPagamento) where.formaPagamento = formaPagamento;
   if (year && month) {
-    const start = new Date(parseInt(year), parseInt(month) - 1, 1);
-    const end = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59, 999);
+    const start = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, 1));
+    const end = new Date(Date.UTC(parseInt(year), parseInt(month), 0, 23, 59, 59, 999));
     where.data = { gte: start, lte: end };
   }
 

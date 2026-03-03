@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { receitaSchema } from "@/lib/validators";
 
+function isNotFound(e: unknown): boolean {
+  return typeof e === "object" && e !== null && "code" in e && (e as { code: string }).code === "P2025";
+}
+
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await req.json();
@@ -12,25 +16,34 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const { data: d } = parsed;
-  const receita = await prisma.receita.update({
-    where: { id },
-    data: {
-      descricao: d.descricao,
-      valor: d.valor,
-      data: new Date(d.data),
-      categoriaId: d.categoriaId,
-      formaPagamento: d.formaPagamento,
-      paciente: d.paciente,
-      observacao: d.observacao,
-    },
-    include: { categoria: true },
-  });
-
-  return NextResponse.json(receita);
+  try {
+    const receita = await prisma.receita.update({
+      where: { id },
+      data: {
+        descricao: d.descricao,
+        valor: d.valor,
+        data: new Date(d.data),
+        categoriaId: d.categoriaId,
+        formaPagamento: d.formaPagamento,
+        paciente: d.paciente,
+        observacao: d.observacao,
+      },
+      include: { categoria: true },
+    });
+    return NextResponse.json(receita);
+  } catch (e) {
+    if (isNotFound(e)) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    throw e;
+  }
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await prisma.receita.delete({ where: { id } });
-  return NextResponse.json({ ok: true });
+  try {
+    await prisma.receita.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    if (isNotFound(e)) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    throw e;
+  }
 }

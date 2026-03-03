@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { despesaSchema } from "@/lib/validators";
 
+function isNotFound(e: unknown): boolean {
+  return typeof e === "object" && e !== null && "code" in e && (e as { code: string }).code === "P2025";
+}
+
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await req.json();
@@ -12,26 +16,35 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const { data: d } = parsed;
-  const despesa = await prisma.despesa.update({
-    where: { id },
-    data: {
-      descricao: d.descricao,
-      valor: d.valor,
-      data: new Date(d.data),
-      categoriaId: d.categoriaId,
-      tipoGasto: d.tipoGasto,
-      fornecedor: d.fornecedor,
-      observacao: d.observacao,
-      recorrente: d.recorrente,
-    },
-    include: { categoria: true },
-  });
-
-  return NextResponse.json(despesa);
+  try {
+    const despesa = await prisma.despesa.update({
+      where: { id },
+      data: {
+        descricao: d.descricao,
+        valor: d.valor,
+        data: new Date(d.data),
+        categoriaId: d.categoriaId,
+        tipoGasto: d.tipoGasto,
+        fornecedor: d.fornecedor,
+        observacao: d.observacao,
+        recorrente: d.recorrente,
+      },
+      include: { categoria: true },
+    });
+    return NextResponse.json(despesa);
+  } catch (e) {
+    if (isNotFound(e)) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    throw e;
+  }
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await prisma.despesa.delete({ where: { id } });
-  return NextResponse.json({ ok: true });
+  try {
+    await prisma.despesa.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    if (isNotFound(e)) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    throw e;
+  }
 }

@@ -8,8 +8,8 @@ export async function GET(req: NextRequest) {
   const startMonth = parseInt(searchParams.get("startMonth") ?? "1");
   const endMonth = parseInt(searchParams.get("endMonth") ?? String(now.getMonth() + 1));
 
-  const start = new Date(year, startMonth - 1, 1);
-  const end = new Date(year, endMonth, 0, 23, 59, 59, 999);
+  const start = new Date(Date.UTC(year, startMonth - 1, 1));
+  const end = new Date(Date.UTC(year, endMonth, 0, 23, 59, 59, 999));
 
   const [despesas, receitas] = await Promise.all([
     prisma.despesa.findMany({
@@ -53,8 +53,8 @@ export async function GET(req: NextRequest) {
   const evolucao = await Promise.all(
     Array.from({ length: months }, (_, i) => {
       const m = startMonth + i;
-      const s = new Date(year, m - 1, 1);
-      const e = new Date(year, m, 0, 23, 59, 59, 999);
+      const s = new Date(Date.UTC(year, m - 1, 1));
+      const e = new Date(Date.UTC(year, m, 0, 23, 59, 59, 999));
       return Promise.all([
         prisma.despesa.aggregate({ where: { data: { gte: s, lte: e } }, _sum: { valor: true } }),
         prisma.receita.aggregate({ where: { data: { gte: s, lte: e } }, _sum: { valor: true } }),

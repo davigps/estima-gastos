@@ -7,10 +7,10 @@ export async function GET(req: NextRequest) {
   const year = parseInt(searchParams.get("year") ?? String(now.getFullYear()));
   const month = parseInt(searchParams.get("month") ?? String(now.getMonth() + 1));
 
-  const startOfMonth = new Date(year, month - 1, 1);
-  const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
-  const startOfPrevMonth = new Date(year, month - 2, 1);
-  const endOfPrevMonth = new Date(year, month - 1, 0, 23, 59, 59, 999);
+  const startOfMonth = new Date(Date.UTC(year, month - 1, 1));
+  const endOfMonth = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+  const startOfPrevMonth = new Date(Date.UTC(year, month - 2, 1));
+  const endOfPrevMonth = new Date(Date.UTC(year, month - 1, 0, 23, 59, 59, 999));
 
   const [
     despesasMes,
@@ -46,9 +46,9 @@ export async function GET(req: NextRequest) {
     // Last 6 months
     Promise.all(
       Array.from({ length: 6 }, (_, i) => {
-        const d = new Date(year, month - 1 - i, 1);
-        const start = new Date(d.getFullYear(), d.getMonth(), 1);
-        const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+        const d = new Date(Date.UTC(year, month - 1 - i, 1));
+        const start = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+        const end = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0, 23, 59, 59, 999));
         return Promise.all([
           prisma.despesa.aggregate({ where: { data: { gte: start, lte: end } }, _sum: { valor: true } }),
           prisma.receita.aggregate({ where: { data: { gte: start, lte: end } }, _sum: { valor: true } }),
