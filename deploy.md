@@ -47,18 +47,24 @@ No custom build/start commands are needed — Railway auto-detects `pnpm build` 
 
 ### How migrations and seeding work automatically
 
-The `package.json` scripts handle everything on every deploy:
+The `package.json` scripts handle everything automatically:
 
+**Build phase** (no database access):
 ```
-"prebuild":  "prisma generate"              ← generates the Prisma client
-"build":     "next build"                   ← builds the Next.js app
-"postbuild": "prisma migrate deploy && tsx prisma/seed.ts"
-                ↑ applies pending migrations    ↑ seeds categories (upsert = no duplicates)
+"prebuild": "prisma generate"   ← generates the typed Prisma client
+"build":    "next build"        ← builds the Next.js app
 ```
 
-- **`prisma generate`** — generates typed Prisma client before the build (required for TypeScript).
+**Start phase** (database is reachable):
+```
+"start": "prisma migrate deploy && tsx prisma/seed.ts && next start"
+            ↑ applies pending migrations   ↑ seeds categories (upsert = no duplicates)
+```
+
+> Railway's build step runs in an isolated container **without network access** to other services, so migrations and seeding must run at start time.
+
 - **`prisma migrate deploy`** — applies pending migrations. If already up-to-date, it's a no-op.
-- **`tsx prisma/seed.ts`** — seeds default categories using `upsert`, safe to run on every deploy.
+- **`tsx prisma/seed.ts`** — seeds default categories using `upsert`, safe to run on every start.
 
 > Railway auto-detects pnpm from the `pnpm-lock.yaml` file.
 
