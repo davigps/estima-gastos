@@ -69,13 +69,10 @@ export default function ReceitaForm({ categorias, defaultValues, onSubmit, loadi
       <Input
         label="Valor (R$)"
         id="valor"
-        type="number"
-        step="0.01"
-        min="0"
         inputMode="decimal"
         placeholder="0,00"
         error={errors.valor?.message}
-        {...register("valor", { valueAsNumber: true })}
+        {...register("valor", { setValueAs: (v) => parseFloat(String(v).replace(",", ".")) })}
       />
 
       <Input
