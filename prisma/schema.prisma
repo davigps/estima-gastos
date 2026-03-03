@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Categoria {
+  id        String         @id @default(cuid())
+  nome      String
+  tipo      TipoLancamento
+  icone     String?
+  cor       String?
+  ativa     Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  despesas Despesa[]
+  receitas Receita[]
+}
+
+model Despesa {
+  id          String    @id @default(cuid())
+  descricao   String
+  valor       Decimal   @db.Decimal(10, 2)
+  data        DateTime
+  categoriaId String
+  categoria   Categoria @relation(fields: [categoriaId], references: [id])
+  tipoGasto   TipoGasto @default(VARIAVEL)
+  fornecedor  String?
+  observacao  String?
+  recorrente  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Receita {
+  id             String         @id @default(cuid())
+  descricao      String
+  valor          Decimal        @db.Decimal(10, 2)
+  data           DateTime
+  categoriaId    String
+  categoria      Categoria      @relation(fields: [categoriaId], references: [id])
+  formaPagamento FormaPagamento
+  paciente       String?
+  observacao     String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+enum TipoLancamento {
+  DESPESA
+  RECEITA
+}
+
+enum TipoGasto {
+  FIXO
+  VARIAVEL
+}
+
+enum FormaPagamento {
+  DINHEIRO
+  PIX
+  CARTAO_CREDITO
+  CARTAO_DEBITO
+  TRANSFERENCIA
+  BOLETO
+  CONVENIO
+}

@@ -1,0 +1,17 @@
+{
+  "name": "Estima Odontologia",
+  "short_name": "Estima",
+  "description": "Controle de gastos para consultório odontológico",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#2563EB",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
